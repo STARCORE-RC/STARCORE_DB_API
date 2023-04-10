@@ -9,12 +9,14 @@ const postgres = require("postgres")
 
 const configs = require('./config.json')
 
-app.get('/tournament', async (_req, res) => {
+app.get('/tournaments', async (_req, res) => {
     const sql = postgres(configs.connection)
 
-    let amount = res.body.amount
+    let amount = _req.body.amount
+    // console.log(_req.body.amount)
 
 let data = await sql`SELECT * FROM tournaments ORDER BY date DESC LIMIT ${amount}`
+console.log(data)
 
     res.send({
         message: data,
@@ -23,11 +25,14 @@ let data = await sql`SELECT * FROM tournaments ORDER BY date DESC LIMIT ${amount
 
     })
 
+
 app.post('/tournament', async (req, res) => {
     const sql = postgres(configs.connection)
 
     let data = req.body
     let auth = data.auth
+
+    console.log(data)
 
     if (auth === configs.auth) {
         let name = data.name
@@ -37,18 +42,15 @@ app.post('/tournament', async (req, res) => {
         let hostlink = data.hostlink
         let host = data.host
 
-        // Regex to check if placements is an array of strings
-        const regex = /^(Array)\s*\(\s*((".*")\s*,\s*)*(".*")\s*\)$/;
-        if(regex.test(placements.toString())) {
-            console.log('regex matched')
-        } else {
-            res.send({
-              message: 'placements is not an array',
-                status: 400
-            })
-        }
+
 
         await sql`INSERT INTO tournaments (name, placements, date, link, hostlink, host) VALUES (${name}, ${placements}, ${date}, ${link}, ${hostlink}, ${host})`
+
+        res.send({
+            message: 'Tournament added',
+            status: 200
+        })
+
 
     } else {
         res.send({
@@ -59,3 +61,7 @@ app.post('/tournament', async (req, res) => {
 
 
 })
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+} );
