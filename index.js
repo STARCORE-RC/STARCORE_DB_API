@@ -3,54 +3,130 @@ const express = require('express');
 const PORT = 8000
 
 const app = express();
-app.use(express.json())
+app.use(express.json());
 
 const postgres = require("postgres")
 
 const configs = require('./config.json')
 
-app.get('/tournaments', async (_req, res) => {
+app.get('/tournament_by_name', async (_req, res) => {
     const sql = postgres(configs.connection)
 
-    let amount = _req.body.amount
-    // console.log(_req.body.amount)
+    let name = _req.body.name
 
-let data = await sql`SELECT * FROM tournaments ORDER BY date DESC LIMIT ${amount}`
-console.log(data)
+    let data = await sql`SELECT * FROM tournaments WHERE name = ${name}`
 
     res.send({
         message: data,
         status: 200
     })
 
+})
+
+
+app.get('/last_x_tournament', async (req, res) => {
+    const sql = postgres(configs.connection)
+
+    console.log(req.body)
+
+    // Check if `amount` is provided in the request body
+    if (!req.body.amount) {
+        res.status(400).send({
+            message: 'Missing required parameter `amount`',
+            status: 400
+        })
+        return
+    }
+
+    let amount = req.body.amount
+    console.log(amount)
+
+    let data = await sql`SELECT * FROM tournaments ORDER BY date DESC LIMIT ${amount}`
+    // console.log(data)
+
+    res.send({
+        message: data,
+        status: 200
     })
 
+})
 
-app.post('/tournament', async (req, res) => {
+
+
+app.post('/add-tournament', async (req, res) => {
+    const sql = postgres(configs.connection)
+
+    const { name, placements, date, link, hostlink, host, auth } = req.body
+
+    if (auth !== configs.auth) {
+        res.status(401).send({
+            message: 'Unauthorized',
+            status: 401
+        })
+        return
+    }
+
+    if (!Array.isArray(placements) || !placements.every(x => typeof x === 'string')) {
+        res.status(400).send({
+            message: 'Invalid placements',
+            status: 400
+        })
+        return
+    }
+
+    try {
+        await sql`INSERT INTO tournaments (name, placements, date, link, hostlink, host) VALUES (${name}, ${placements}, ${date}, ${link}, ${hostlink}, ${host})`
+        res.status(200).send({
+            message: 'Tournament added',
+            status: 200
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).send({
+            message: 'Error adding tournament',
+            status: 500
+        })
+    }
+})
+
+
+
+app.put('/edit-tournament', async (req, res) => {
     const sql = postgres(configs.connection)
 
     let data = req.body
     let auth = data.auth
 
-    console.log(data)
-
     if (auth === configs.auth) {
-        let name = data.name
-        let placements = data.placements
-        let date = data.date
-        let link = data.link
-        let hostlink = data.hostlink
-        let host = data.host
+        const { name, placements, date, link, hostlink, host, auth } = req.body;
 
 
+        let valid = placements.isArray() && placements.every(x => typeof x === 'string')
 
-        await sql`INSERT INTO tournaments (name, placements, date, link, hostlink, host) VALUES (${name}, ${placements}, ${date}, ${link}, ${hostlink}, ${host})`
+        if (!valid) {
+            res.send({
+                message: 'Invalid placements',
+                status: 400
+            })
+        } else {
 
-        res.send({
-            message: 'Tournament added',
-            status: 200
-        })
 
+            try {
+                await sql`UPDATE tournaments SET placements = ${placements}, date = ${date}, link = ${link}, hostlink = ${hostlink}, host = ${host} WHERE name = ${name}`;
+                res.send({
+                    message: 'Tournament updated',
+                    status: 200
+                });
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({
+                    message: 'Server error',
+                    status: 500
+                });
+            }
+
+
+        }
 
     } else {
         res.send({
@@ -62,6 +138,7 @@ app.post('/tournament', async (req, res) => {
 
 })
 
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-} );
+});
