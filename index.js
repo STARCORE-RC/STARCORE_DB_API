@@ -47,8 +47,6 @@ app.get('/tournament_by_name', async (req, res) => {
 app.get('/last_x_tournament', async (req, res) => {
     const sql = postgres(configs.connection)
 
-    console.log(req.body)
-
     // Check if `amount` is provided in the request body
     if (!req.body.amount) {
         res.status(400).send({
@@ -59,10 +57,8 @@ app.get('/last_x_tournament', async (req, res) => {
     }
 
     let amount = req.body.amount
-    console.log(amount)
 
     let data = await sql`SELECT * FROM tournaments ORDER BY date DESC LIMIT ${amount}`
-    // console.log(data)
 
     res.send({
         message: data,
@@ -78,7 +74,7 @@ app.get('/last_x_tournament', async (req, res) => {
 app.post('/add-tournament', async (req, res) => {
     const sql = postgres(configs.connection)
 
-    const { name, placements, date, link, hostlink, host, auth } = req.body
+    const {name, placements, date, link, hostlink, host, auth} = req.body
 
     if (auth !== configs.auth) {
         res.status(401).send({
@@ -118,59 +114,75 @@ app.post('/add-tournament', async (req, res) => {
 app.put('/edit-tournament', async (req, res) => {
     const sql = postgres(configs.connection);
 
-    let data = req.body;
-    let auth = data.auth;
-
-    if (auth === configs.auth) {
-        const { name, placements, date, link, hostlink, host, auth } = req.body;
-
-        // Fetch existing data from the database
-        let existingData = await sql`SELECT * FROM tournaments WHERE name = ${name}`;
-
-        if (existingData.length === 0) {
-            // If no data was found, send a 404 Not Found response
-            res.send({
-                message: 'Tournament not found',
-                status: 404
-            });
-            return;
-        }
-
-        // Check if the placements property is an array and all its elements are strings
-        let valid = Array.isArray(existingData[0].placements) && existingData[0].placements.every(x => typeof x === 'string');
-
-        if (!valid) {
-            // If placements is not a valid array, send a 400 Bad Request response
-            res.send({
-                message: 'Invalid placements',
-                status: 400
-            });
-        } else {
-            // Otherwise, update the tournament in the database
-            try {
-                await sql`UPDATE tournaments SET placements = ${placements}, date = ${date}, link = ${link}, hostlink = ${hostlink}, host = ${host} WHERE name = ${name}`;
-                res.send({
-                    message: 'Tournament updated',
-                    status: 200
-                });
-            } catch (error) {
-                console.log(error);
-                res.status(500).send({
-                    message: 'Server error',
-                    status: 500
-                });
-            }
-        }
-    } else {
-        // If the authentication token is invalid, send a 401 Unauthorized response
-        res.send({
+    if (req.body.auth !== configs.auth) { // checking if user is authorized
+        res.status(401).send({
             message: 'Unauthorized',
             status: 401
-        });
+        })
+        return
+    } else { // case if auth is correct
+
+        // object with body data
+        let data = {
+            name: req.body.name,
+            placements: req.body.placements,
+            date: req.body.date,
+            link: req.body.link,
+            hostlink: req.body.hostlink,
+            host: req.body.host
+        }
+
+        // object with data of the tournament that is being edited
+        let existingTournament = await sql`SELECT * FROM tournaments WHERE name = ${data.name}`
+
+        if (existingTournament.length === 0) {
+            res.status(404).send({
+                message: 'Tournament not found',
+                status: 404
+            })
+            return
+        }
+
+        let finalData = {
+            name: data.name,
+            placements: data.placements,
+            date: data.date,
+            link: data.link,
+            hostlink: data.hostlink,
+            host: data.host
+
+        }
+
+
+        let keysToCheck = ["placements", "date", "link", "hostlink", "host"]
+
+        for (let i = 0; i < keysToCheck.length; i++) {
+            if (data[keysToCheck[i]]) {
+                finalData[keysToCheck[i]] = data[keysToCheck[i]]
+            } else {
+                finalData[keysToCheck[i]] = existingTournament[0][keysToCheck[i]]
+            }
+        }
+
+        try {
+            await sql`UPDATE tournaments SET name = ${data.name}, placements = ${finalData.placements}, date = ${finalData.date}, link = ${finalData.link}, hostlink = ${finalData.hostlink}, host = ${finalData.host} WHERE name = ${finalData.name}`
+            res.status(200).send({
+                message: 'Tournament updated',
+                status: 200
+            })
+        } catch (error) {
+            console.error(error)
+            res.status(500).send({
+                message: 'Error updating tournament',
+                status: 500
+            })
+        }
+
+
     }
+
+
 });
-
-
 
 
 app.listen(PORT, () => {
