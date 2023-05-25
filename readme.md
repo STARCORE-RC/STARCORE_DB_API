@@ -4,16 +4,14 @@ Welcome to the documentation for the StarCore DB API. This API allows you to int
 
 ## Base URL
 
-The base URL for all API endpoints is: `http://your-domain.com/api`
+The base URL for all API endpoints is: `http://ip-address:7060/api`
 
 ## Authentication
 
 Authentication is required to access the API endpoints. Include the following header in your requests:
 
-Authorization: Bearer <access_token>
+Authorization: <access_token>
 
-shell
-Copy code
 
 Replace `<access_token>` with a valid access token obtained through the authentication process.
 
@@ -21,28 +19,23 @@ Replace `<access_token>` with a valid access token obtained through the authenti
 
 ### 1. Retrieve a Tournament by Name
 
-GET /api/tournament_by_name?name=<name>
+GET /tournament_by_name?name=<name>
 
-csharp
-Copy code
+
 
 This endpoint retrieves a tournament from the database based on its name. Replace `<name>` with the name of the tournament you want to retrieve. This endpoint returns the details of the specified tournament.
 
 ### 2. Retrieve the Last X Tournaments
 
-GET /api/last_x_tournament?amount=<amount>
+GET /last_x_tournament?amount=<amount>
 
-sql
-Copy code
 
 This endpoint retrieves the last `X` tournaments from the database, starting with the newest. Replace `<amount>` with the number of tournaments you want to retrieve. This endpoint returns an array of tournament details.
 
 ### 3. Add a Tournament
 
-POST /api/add-tournament
+POST /add-tournament
 
-markdown
-Copy code
 
 This endpoint adds a new tournament to the database. Include the following parameters in the request body:
 
@@ -52,14 +45,13 @@ This endpoint adds a new tournament to the database. Include the following param
 - `link` (string): The link to the tournament.
 - `hostlink` (string): The link to the host of the tournament.
 - `host` (string): The host of the tournament.
-- `auth` (string): The authentication token from the config file.
+
+Make sure to include the `Authorization` header with the access token.
 
 ### 4. Edit a Tournament
 
-PUT /api/edit-tournament
+PUT /edit-tournament
 
-vbnet
-Copy code
 
 This endpoint edits an existing tournament in the database. Include the following parameters in the request body:
 
@@ -69,10 +61,9 @@ This endpoint edits an existing tournament in the database. Include the followin
 - `link` (string): The updated link to the tournament.
 - `hostlink` (string): The updated link to the host of the tournament.
 - `host` (string): The updated host of the tournament.
-- `auth` (string): The authentication token from the config file.
 
-Please note that authentication is required for adding and editing tournaments.
+Make sure to include the `Authorization` header with the access token.
 
 For all endpoints, successful responses will have a `200` status code, and error responses will have appropriate status codes along with error messages.
 
-That's it! You can now use the StarCore DB API to interact with the tournaments in th
+That's it! You can now use the StarCore DB API to interact with the tournaments in the data
