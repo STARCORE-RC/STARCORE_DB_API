@@ -1,69 +1,76 @@
-# StarCore DB API Documentation
+# API Documentation
 
-Welcome to the documentation for the StarCore DB API. This API allows you to interact with the StarCore database by performing CRUD operations (Create, Read, Update, Delete) on the tournaments stored in the database.
+## Introduction
+This API provides endpoints for managing tournaments. It allows you to retrieve tournaments, add new tournaments, edit existing tournaments, and delete tournaments.
 
 ## Base URL
-
-The base URL for all API endpoints is: `http://ip-address:7060/api`
+- Base URL: http://localhost:7060/api
 
 ## Authentication
+To access the API endpoints, you need to include an `Authorization` header with a valid authentication token. The authentication token should be provided in the `config.json` file.
 
-Authentication is required to access the API endpoints. Include the following header in your requests:
-
-Authorization: <access_token>
-
-
-Replace `<access_token>` with a valid access token obtained through the authentication process.
+## Rate Limiting
+The API enforces rate limiting to prevent abuse. By default, each IP address is limited to 10 requests per minute.
 
 ## Endpoints
 
-### 1. Retrieve a Tournament by Name
+### Retrieve Tournament by Name
+Retrieves a tournament by its name.
 
-GET /tournament_by_name?name=<name>
+- Endpoint: GET /tournament_by_name
+- Parameters:
+    - `name` (required): Name of the tournament
 
+### Retrieve Last X Tournaments
+Retrieves the last X tournaments, starting with the newest.
 
+- Endpoint: GET /last_x_tournament
+- Parameters:
+    - `amount` (required): Number of tournaments to retrieve
 
-This endpoint retrieves a tournament from the database based on its name. Replace `<name>` with the name of the tournament you want to retrieve. This endpoint returns the details of the specified tournament.
+### Add Tournament
+Adds a new tournament to the database.
 
-### 2. Retrieve the Last X Tournaments
+- Endpoint: POST /add-tournament
+- Request Body:
+    - `name` (required): Name of the tournament
+    - `placements` (required): Array of strings representing the placements
+    - `date` (required): Date of the tournament
+    - `link`: URL link of the tournament
+    - `hostlink`: URL link of the host
+    - `host`: Host of the tournament
+    - `auth` (required): Authentication token
 
-GET /last_x_tournament?amount=<amount>
+### Edit Tournament
+Edits an existing tournament in the database.
 
+- Endpoint: PUT /edit-tournament
+- Request Body:
+    - `name` (required): Name of the tournament to be edited
+    - `placements`: Array of strings representing the updated placements
+    - `date`: Updated date of the tournament
+    - `link`: Updated URL link of the tournament
+    - `hostlink`: Updated URL link of the host
+    - `host`: Updated host of the tournament
+    - `auth` (required): Authentication token
 
-This endpoint retrieves the last `X` tournaments from the database, starting with the newest. Replace `<amount>` with the number of tournaments you want to retrieve. This endpoint returns an array of tournament details.
+### Delete Tournament
+Deletes a tournament by its name.
 
-### 3. Add a Tournament
+- Endpoint: DELETE /delete-tournament
+- Parameters:
+    - `name` (required): Name of the tournament to be deleted
 
-POST /add-tournament
+## Error Handling
+The API returns appropriate HTTP status codes and error messages for different scenarios.
 
+## Development
+To run the API locally, follow these steps:
+1. Clone the repository: `git clone https://github.com/your-repo.git`
+2. Install the dependencies: `npm install`
+3. Configure the database connection and authentication token in the `config.json` file.
+4. Start the server: `npm start`
+5. The API will be accessible at `http://localhost:7060/api`.
 
-This endpoint adds a new tournament to the database. Include the following parameters in the request body:
-
-- `name` (string): The name of the tournament.
-- `placements` (array of strings): The placements of the tournament.
-- `date` (string): The date of the tournament.
-- `link` (string): The link to the tournament.
-- `hostlink` (string): The link to the host of the tournament.
-- `host` (string): The host of the tournament.
-
-Make sure to include the `Authorization` header with the access token.
-
-### 4. Edit a Tournament
-
-PUT /edit-tournament
-
-
-This endpoint edits an existing tournament in the database. Include the following parameters in the request body:
-
-- `name` (string): The name of the tournament to edit.
-- `placements` (array of strings): The updated placements of the tournament.
-- `date` (string): The updated date of the tournament.
-- `link` (string): The updated link to the tournament.
-- `hostlink` (string): The updated link to the host of the tournament.
-- `host` (string): The updated host of the tournament.
-
-Make sure to include the `Authorization` header with the access token.
-
-For all endpoints, successful responses will have a `200` status code, and error responses will have appropriate status codes along with error messages.
-
-That's it! You can now use the StarCore DB API to interact with the tournaments in the data
+## Contribution
+Contributions to improve the API are welcome! If you find any issues or have suggestions, please open an issue or submit a pull request.

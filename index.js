@@ -195,12 +195,52 @@ app.put('/api/edit-tournament', async (req, res) => {
 
 
 
-
-
 });
 
-// app.use(limiter)
-// app.use('/api', authCheck)
+// DELETE /api/delete-tournament?name=<name>
+// Deletes a tournament by its name
+app.delete('/api/delete-tournament', async (req, res) => {
+    const sql = postgres(configs.connection);
+
+    const name = req.query.name;
+
+    if (!name) {
+        res.status(400).send({
+            message: 'Missing required parameter `name`',
+            status: 400
+        });
+        return;
+    }
+
+    try {
+        // Check if the tournament exists
+        const existingTournament = await sql`SELECT * FROM tournaments WHERE name = ${name}`;
+
+        if (existingTournament.length === 0) {
+            res.status(404).send({
+                message: 'Tournament not found',
+                status: 404
+            });
+            return;
+        }
+
+        // Delete the tournament
+        await sql`DELETE FROM tournaments WHERE name = ${name}`;
+
+        res.status(200).send({
+            message: 'Tournament deleted',
+            status: 200
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            message: 'Error deleting tournament',
+            status: 500
+        });
+    }
+});
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
